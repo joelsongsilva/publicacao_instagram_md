@@ -25,12 +25,36 @@ Suite, isso já está feito — mas confirme em:
 
 ## Passo 1 — Criar o app no Meta for Developers
 
-1. Acesse <https://developers.facebook.com/apps/> e clique em **Criar app**.
-2. Em caso de uso, escolha **Outro** e depois tipo de app **Empresa**
+> **Atenção ao site.** O portal de desenvolvedores é `developers.facebook.com`
+> — fundo azul-escuro, menu com "Docs / Ferramentas / Suporte". Ele **não** é
+> o Meta Business Suite (`business.facebook.com`), que tem menu lateral branco
+> com "Configurações de publicidade" e "Todas as ferramentas".
+> A seção *Apps* do Business Suite mostra apenas apps já vinculados à empresa e
+> **não permite criar** nenhum — se você caiu numa tela dizendo "Nenhum
+> aplicativo encontrado / Solicite acesso a um administrador", está no lugar
+> errado.
+
+1. Abra <https://developers.facebook.com/> **em uma aba nova**, sem navegar a
+   partir do Business Suite. Confirme no canto superior direito que está logado
+   na conta pessoal que administra a Página.
+
+2. **Registre-se como desenvolvedor (primeira vez apenas).** Enquanto isso não
+   for feito, o botão de criar app não existe. Clique em **Começar**
+   (*Get Started*), aceite os termos, confirme e-mail/telefone e escolha a
+   função **Desenvolvedor**. Leva ~2 minutos e é gratuito.
+
+3. Vá em **Meus Apps** > **Criar aplicativo**
+   (atalho: <https://developers.facebook.com/apps/creation/>).
+
+4. Em caso de uso, escolha **Outro** e depois tipo de app **Empresa**
    (*Business*).
-3. Nome: `Meditacao Diaria - Publicador`. Não precisa vincular a uma conta
-   comercial neste momento.
-4. Criado o app, vá em **Adicionar produto** e adicione **Instagram**.
+
+5. Nome: `Meditacao Diaria - Publicador`.
+   **Quando perguntar se quer vincular a uma conta comercial, pule.** Vincular
+   dispara exigência de verificação de empresa (envio de documentos, dias de
+   espera) que é desnecessária para publicar na própria conta.
+
+6. Criado o app, vá em **Adicionar produto** e adicione **Instagram**.
 
 ## Passo 2 — Guardar App ID e App Secret
 
