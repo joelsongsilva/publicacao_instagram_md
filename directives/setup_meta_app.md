@@ -14,12 +14,28 @@ revisão.
 
 ---
 
-## Pré-requisito
+## Passo 0 — Conferir o vínculo Página ↔ Instagram
 
-Sua conta do Instagram precisa ser **Profissional (Comercial/Criador)** e estar
-**vinculada a uma Página do Facebook**. Se você já agenda pelo Meta Business
-Suite, isso já está feito — mas confirme em:
-`Instagram > Configurações > Conta profissional > Compartilhamento com a Página`.
+Este é o pré-requisito que faz toda a automação funcionar. Sem ele, o
+`obter_token.py` para com "nenhuma Página do Facebook encontrada".
+
+A conta `meditacaoencorajamento` precisa ser **Profissional (Comercial ou
+Criador)** e estar **vinculada a uma Página do Facebook**.
+
+**Como conferir** (qualquer um dos dois):
+
+- No app do Instagram: `Configurações > Conta profissional > Compartilhamento
+  com a Página`. Deve aparecer o nome da Página.
+- No Facebook, na Página: `Configurações > Contas vinculadas > Instagram`.
+  Deve aparecer `@meditacaoencorajamento`.
+
+**Se não estiver vinculado**, faça a vinculação por um desses caminhos antes de
+continuar. É gratuito e imediato.
+
+> **Não se preocupe se a Página não aparece no portfólio empresarial.**
+> O Business Suite pode listar só o Instagram como ativo, e ainda assim a API
+> funciona. O que importa é (a) o vínculo Página ↔ Instagram e (b) sua conta
+> pessoal do Facebook ser **administradora** da Página.
 
 ---
 
@@ -37,6 +53,17 @@ Suite, isso já está feito — mas confirme em:
 1. Abra <https://developers.facebook.com/> **em uma aba nova**, sem navegar a
    partir do Business Suite. Confirme no canto superior direito que está logado
    na conta pessoal que administra a Página.
+
+   > **Erro "you will be operating with your Facebook personal account, instead
+   > of your current WorkPlatform one"?**
+   > Seu navegador está numa sessão de conta empresarial (WorkPlatform), e o
+   > cadastro de desenvolvedor só existe para contas pessoais. Clique em
+   > **Acessar WWW** no aviso. Se não resolver, abra uma **janela anônima**,
+   > faça login em `facebook.com` com a conta pessoal e só então volte para
+   > `developers.facebook.com`.
+   >
+   > O registro de desenvolvedor é sempre de uma **pessoa**, nunca de um
+   > portfólio empresarial. O portfólio é apenas um contêiner de ativos.
 
 2. **Registre-se como desenvolvedor (primeira vez apenas).** Enquanto isso não
    for feito, o botão de criar app não existe. Clique em **Começar**
