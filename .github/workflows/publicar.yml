@@ -1,0 +1,85 @@
+name: Publicar carrossel do dia
+
+on:
+  schedule:
+    # 08:00 UTC = 05:00 no horario de Brasilia (o Brasil nao tem mais horario de verao).
+    # Obs.: o agendador do GitHub pode atrasar alguns minutos em horarios de pico.
+    - cron: "0 8 * * *"
+
+  # Permite disparar manualmente pela aba Actions (util para testes e para
+  # republicar um dia que falhou).
+  workflow_dispatch:
+    inputs:
+      data:
+        description: "Data a publicar (YYYY-MM-DD). Vazio = hoje."
+        required: false
+        type: string
+      dry_run:
+        description: "Apenas validar, sem publicar"
+        required: false
+        type: boolean
+        default: true
+      forcar:
+        description: "Publicar mesmo se a data ja constar no log"
+        required: false
+        type: boolean
+        default: false
+
+# Necessario para gravar de volta o logs/publicados.csv
+permissions:
+  contents: write
+
+# Impede duas execucoes simultaneas publicarem o mesmo post
+concurrency:
+  group: publicar-instagram
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Baixar o repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Publicar
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          META_APP_ID: ${{ secrets.META_APP_ID }}
+          META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
+          # Passados por env (e nao interpolados direto no shell) para que um
+          # valor com caracteres especiais nao vire comando.
+          IN_DATA: ${{ inputs.data }}
+          IN_DRY_RUN: ${{ inputs.dry_run }}
+          IN_FORCAR: ${{ inputs.forcar }}
+        run: |
+          ARGS=()
+          if [ -n "$IN_DATA" ]; then ARGS+=(--data "$IN_DATA"); fi
+          if [ "$IN_DRY_RUN" = "true" ]; then ARGS+=(--dry-run); fi
+          if [ "$IN_FORCAR" = "true" ]; then ARGS+=(--forcar); fi
+          echo "Executando: publicar_carrossel.py ${ARGS[*]}"
+          python execution/publicar_carrossel.py "${ARGS[@]}"
+
+      - name: Registrar publicacao no repositorio
+        if: success() && inputs.dry_run != true
+        run: |
+          if [ -z "$(git status --porcelain logs/)" ]; then
+            echo "Nada novo para registrar."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add logs/
+          git commit -m "log: publicacao de $(TZ=America/Sao_Paulo date +%Y-%m-%d)"
+          git push

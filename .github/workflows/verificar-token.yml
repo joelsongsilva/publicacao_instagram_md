@@ -1,0 +1,33 @@
+name: Verificar token e conteudo
+
+on:
+  schedule:
+    # Toda segunda-feira as 12:00 UTC (09:00 de Brasilia).
+    - cron: "0 12 * * 1"
+  workflow_dispatch:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Conferir validade do token
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          META_APP_ID: ${{ secrets.META_APP_ID }}
+          META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
+        run: python execution/verificar_token.py
+
+      - name: Conferir se ha conteudo para os proximos 7 dias
+        run: python execution/conferir_agenda.py --dias 7

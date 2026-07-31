@@ -1,0 +1,8 @@
+.env
+.tmp/
+_legado/
+credentials.json
+token.json
+__pycache__/
+*.pyc
+*.zip
