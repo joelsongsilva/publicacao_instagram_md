@@ -155,15 +155,38 @@ Cole os dois no arquivo `.env` do projeto (copie de `.env.example`).
 2. No canto superior direito, em **Aplicativo Meta**, selecione o app que você
    acabou de criar.
 3. Em **Usuário ou Página**, escolha **Token de acesso do usuário**.
-4. Em **Permissões**, marque exatamente estas:
+4. Em **Permissões**, marque as **cinco**. Nenhuma é opcional:
    - `instagram_basic`
    - `instagram_content_publish`
    - `pages_show_list`
    - `pages_read_engagement`
-   - `business_management`
-5. Clique em **Gerar token de acesso** e conclua o login/autorização. Autorize
-   a Página e a conta do Instagram quando ele perguntar.
+   - `business_management` ← **a mais esquecida, e sem ela nada funciona**
+
+   > **Por que `business_management` é obrigatória.** Ao vincular o Instagram a
+   > uma Página, a Meta move os dois para dentro de um portfólio empresarial.
+   > A Página deixa de ser "sua" diretamente e passa a ser do portfólio — e
+   > **Páginas de portfólio não aparecem em `/me/accounts`** apenas com
+   > `pages_show_list`. O sintoma é o `obter_token.py` dizer "nenhuma Pagina do
+   > Facebook encontrada" mesmo com tudo corretamente vinculado.
+
+   As permissões ficam **agrupadas por categoria** no seletor. As de Página não
+   estão junto das do Instagram — role a lista até o grupo de Páginas.
+
+5. Clique em **Gerar token de acesso** e conclua a autorização. Na tela "O que
+   o app tem permissão para fazer?", deixe **todos os interruptores em SIM** —
+   inclusive o do portfólio empresarial. Confira que a conta do Instagram e a
+   Página aparecem nomeadas corretamente ali.
+
+   > **Aviso vermelho "Enviar para avaliação de login"?** Ignore e siga. Ele só
+   > informa que as permissões não valem para o público geral. Como você é
+   > administrador do app e publica na própria conta, elas funcionam
+   > normalmente. **Não clique em "Envie para análise agora"** — isso abre um
+   > processo de 2 a 4 semanas sem nenhum benefício aqui.
+
 6. Copie o token gerado. **Ele vale só 1 hora** — siga direto para o passo 4.
+
+   > O token do Explorador **não vai para o `.env`**. Ele é passado como
+   > argumento do comando no passo 4, entre aspas.
 
 ## Passo 4 — Converter para o token definitivo
 
