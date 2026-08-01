@@ -22,15 +22,21 @@ Este é o pré-requisito que faz toda a automação funcionar. Sem ele, o
 A conta `meditacaoencorajamento` precisa ser **Profissional (Comercial ou
 Criador)** e estar **vinculada a uma Página do Facebook**.
 
-**Como conferir** (qualquer um dos dois):
+**Na prática, não perca tempo conferindo isso na interface.** O menu do app do
+Instagram muda de lugar a cada atualização, e o `obter_token.py` (passo 4) dá a
+resposta definitiva em 30 segundos, dizendo exatamente o que falta. Vá direto
+ao passo 1 e volte aqui só se ele reclamar.
 
-- No app do Instagram: `Configurações > Conta profissional > Compartilhamento
-  com a Página`. Deve aparecer o nome da Página.
-- No Facebook, na Página: `Configurações > Contas vinculadas > Instagram`.
-  Deve aparecer `@meditacaoencorajamento`.
+Se ainda assim quiser conferir antes, use o caminho **no computador**, que é
+estável: na Página do Facebook, `Configurações > Contas vinculadas > Instagram`.
+Deve aparecer `@meditacaoencorajamento`.
 
-**Se não estiver vinculado**, faça a vinculação por um desses caminhos antes de
-continuar. É gratuito e imediato.
+No app do Instagram, a opção fica hoje em `Configurações e atividade >
+Para profissionais > Tipo e ferramentas da conta` — mas confirme pelo caminho
+do computador, porque esse menu costuma mudar de nome e de lugar.
+
+**Se não estiver vinculado**, faça a vinculação pela Página do Facebook
+(`Configurações > Contas vinculadas > Instagram`). É gratuito e imediato.
 
 > **Não se preocupe se a Página não aparece no portfólio empresarial.**
 > O Business Suite pode listar só o Instagram como ativo, e ainda assim a API
