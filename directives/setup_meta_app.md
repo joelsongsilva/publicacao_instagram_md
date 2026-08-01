@@ -22,21 +22,45 @@ Este é o pré-requisito que faz toda a automação funcionar. Sem ele, o
 A conta `meditacaoencorajamento` precisa ser **Profissional (Comercial ou
 Criador)** e estar **vinculada a uma Página do Facebook**.
 
-**Na prática, não perca tempo conferindo isso na interface.** O menu do app do
-Instagram muda de lugar a cada atualização, e o `obter_token.py` (passo 4) dá a
-resposta definitiva em 30 segundos, dizendo exatamente o que falta. Vá direto
-ao passo 1 e volte aqui só se ele reclamar.
+### Como saber se existe uma Página (verificação definitiva)
 
-Se ainda assim quiser conferir antes, use o caminho **no computador**, que é
-estável: na Página do Facebook, `Configurações > Contas vinculadas > Instagram`.
-Deve aparecer `@meditacaoencorajamento`.
+Não use a Central de Contas para isso: ela lista **perfis** (o que permite
+login e cross-posting entre Facebook e Instagram) e **não** mostra o vínculo
+Página ↔ Instagram que a API exige. Um perfil do Facebook com o nome da marca
+não é uma Página.
 
-No app do Instagram, a opção fica hoje em `Configurações e atividade >
-Para profissionais > Tipo e ferramentas da conta` — mas confirme pelo caminho
-do computador, porque esse menu costuma mudar de nome e de lugar.
+O teste que não falha, no computador:
 
-**Se não estiver vinculado**, faça a vinculação pela Página do Facebook
-(`Configurações > Contas vinculadas > Instagram`). É gratuito e imediato.
+1. Logado em `facebook.com`, clique na **sua foto no canto superior direito**
+2. O menu **"Selecionar perfil"** lista tudo que você gerencia
+
+Se aparecer só o seu perfil e a opção **"Criar Página"**, não existe Página.
+
+### Se não existir Página, crie uma (~2 min, grátis)
+
+Ela funciona apenas como ponte técnica e pode ficar permanentemente vazia.
+
+1. No menu acima, clique em **Criar Página**
+2. Nome: `Meditação Diária`. Categoria: `Organização religiosa` (a categoria
+   não afeta a API). Descrição é opcional.
+3. **Pule** todas as telas seguintes de foto, capa, convites e anúncios
+4. **Vincule ao Instagram** — este é o passo que importa:
+   - Se o Facebook oferecer "Conectar o Instagram" logo após a criação, aceite
+     e faça login na conta `@meditacaoencorajamento`
+   - Se não oferecer: na Página, `Configurações > Contas vinculadas >
+     Instagram > Conectar conta`
+5. Confira: o menu "Selecionar perfil" agora deve listar **duas** entradas —
+   o perfil e a Página
+
+### Conta profissional
+
+A conta do Instagram também precisa ser **Profissional** (Comercial ou
+Criador). Confira em `Configurações e atividade > Para profissionais >
+Tipo e ferramentas da conta` no app.
+
+> Não perca tempo tentando validar o vínculo por menus além disso. O
+> `obter_token.py` (passo 4) dá a resposta definitiva em 30 segundos e diz
+> exatamente o que está faltando.
 
 > **Não se preocupe se a Página não aparece no portfólio empresarial.**
 > O Business Suite pode listar só o Instagram como ativo, e ainda assim a API
