@@ -6,9 +6,9 @@ Suite.
 
 ## Como funciona
 A API do Instagram **não agenda posts**. Quem faz o papel de agendador é o
-GitHub Actions: todo dia às 05:00 (horário de Brasília) ele acorda, procura no
-CSV a linha da data de hoje, pega as duas artes correspondentes e publica o
-carrossel via API oficial.
+GitHub Actions: todo dia às 05:00 (horário de Brasília) ele acorda, procura na
+planilha do mês a linha do dia de hoje, pega as duas artes correspondentes e
+publica o carrossel via API oficial.
 
 Por isso o trabalho é **mensal**, não diário: basta deixar o material do mês
 no repositório.
@@ -16,6 +16,13 @@ no repositório.
 ---
 
 ## Rotina mensal (fazer uma vez por mês)
+
+> **Pasta do projeto:** `C:\projetos\publicacao_instagram_md`
+>
+> Mantenha o projeto **fora do OneDrive** — a sincronização concorrente na
+> pasta `.git` pode corromper o repositório. O backup é o próprio GitHub.
+>
+> Para a visão geral do fluxo, veja [resumo_executivo.md](../resumo_executivo.md).
 
 ### 1. Gerar o conteúdo
 Siga `directives/geracao_conteudo_sheets.md`.

@@ -11,18 +11,37 @@ Registro das decisões técnicas do projeto "Meditação Diária".
 
 ## 1. Geração de conteúdo
 Prompt de LLM produz a tabela do mês (Data, Titulo, Reflexao, TextoBiblico,
-Versiculo, Legenda) → Google Sheets → exportado como CSV.
+versiculo, legenda) salva como `conteudo/AAAA-MM.xlsx`.
 Ver `directives/geracao_conteudo_sheets.md`.
 
+**Por que `.xlsx` e não `.csv`:** o Excel exporta CSV na codificação do sistema
+por padrão, corrompendo os emojis das legendas. Lendo o xlsx direto (openpyxl),
+os emojis chegam intactos e o passo de exportação desaparece.
+
+**Por que o nome do arquivo carrega o mês:** a planilha identifica as linhas por
+`dia` (1–31), não por data completa. O mês vem do nome (`2026-08.xlsx`). Uma
+coluna `data` completa também é aceita, e nesse caso o nome deixa de importar.
+
 ## 2. Geração das artes
-Canva **Bulk Create** consome o mesmo CSV e gera 60+ páginas de uma vez.
-Export em PNG → `execution/renomeador_imagens.py` renomeia `1.png, 2.png, ...`
-para `YYYY-MM-DD_1.png` / `YYYY-MM-DD_2.png`, agrupando de dois em dois.
+
+Canva **Criar em lote** consome a mesma planilha. O export tem **uma página por
+dia + uma página final** com o card do link — 32 páginas para um mês de 31 dias,
+não 62.
+
+`execution/renomeador_imagens.py` renomeia `1.png ... 31.png` para
+`AAAA-MM-DD.png` e a última página para `AAAA-MM_link.png`, validando a
+contagem contra os dias do mês.
+
+**O card do link não é duplicado.** O publicador resolve o slide 2 nesta ordem:
+`AAAA-MM-DD_2.png` (override do dia) → `AAAA-MM_link.png` (card do mês) →
+`card_link.png` (fallback global). Um arquivo por mês serve os 31 dias, o que
+evita ~17 MB de cópias idênticas no repositório a cada mês.
+
 Ver `directives/canva_bulk_create.md`.
 
 ## 3. Publicação
 
-O conteúdo (`conteudo/legendas.csv`) e as artes (`imagens/`) são commitados no
+O conteúdo (`conteudo/AAAA-MM.xlsx`) e as artes (`imagens/`) são commitados no
 repositório. O GitHub Actions dispara `execution/publicar_carrossel.py` todo
 dia às 05:00 BRT.
 
@@ -62,6 +81,32 @@ token de Página (perpétuo). Automatizado em `execution/obter_token.py`.
 
 Como a publicação é só na conta própria, **não é necessária a Revisão de App
 da Meta** — o app permanece em modo de desenvolvimento.
+
+### Armadilhas encontradas no setup (registradas para não se repetirem)
+
+Estão detalhadas em `directives/setup_meta_app.md`. Resumo do que custou tempo:
+
+| Sintoma | Causa real |
+|---|---|
+| "Nenhum aplicativo encontrado" | Estava no Business Suite, não em `developers.facebook.com` |
+| Botão de criar app inexistente | Faltava o registro prévio como desenvolvedor |
+| Erro de "WorkPlatform" | Sessão de conta empresarial; o cadastro exige perfil pessoal |
+| Perfil confundido com Página | A Central de Contas lista **perfis**, não Páginas. O teste válido é o menu "Selecionar perfil" |
+| Produto Instagram "ausente" | Chama-se **"Graph API do Instagram"** e fica perto do fim da lista |
+| `/me/accounts` vazio com tudo vinculado | A Página pertence a um **portfólio empresarial**, e nesse caso exige `business_management` além de `pages_show_list` |
+| Publicação falhou às 05:00 | Os 4 secrets do GitHub haviam sido cadastrados como **um único secret** |
+
+Duas dessas viraram código, não só documentação: o `obter_token.py` tenta
+`/me/businesses → owned_pages` quando `/me/accounts` volta vazio, e diz
+explicitamente que falta `business_management`.
+
+### Outros defeitos corrigidos ao longo do caminho
+
+- `os.getenv("X", default)` devolve `""` quando a variável existe porém vazia —
+  não o default. Um `GRAPH_API_VERSION=` vazio no `.env` montava uma URL
+  inválida. Trocado por `os.getenv("X") or default` nos três scripts.
+- O console do Windows usa cp1252 e quebrava ao imprimir os emojis das
+  legendas. A saída passou a ser forçada para UTF-8.
 
 ## 4. Rede de segurança
 
