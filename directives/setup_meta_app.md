@@ -103,15 +103,39 @@ Tipo e ferramentas da conta` no app.
 3. Vá em **Meus Apps** > **Criar aplicativo**
    (atalho: <https://developers.facebook.com/apps/creation/>).
 
-4. Em caso de uso, escolha **Outro** e depois tipo de app **Empresa**
-   (*Business*).
+4. Nome: `Meditacao Diaria - Publicador`.
 
-5. Nome: `Meditacao Diaria - Publicador`.
-   **Quando perguntar se quer vincular a uma conta comercial, pule.** Vincular
-   dispara exigência de verificação de empresa (envio de documentos, dias de
-   espera) que é desnecessária para publicar na própria conta.
+5. O assistente pede **"Casos de uso"**. Nenhum dos destaques serve, e essa
+   etapa **não é obrigatória** para o nosso objetivo — o que importa é o
+   produto adicionado no passo 7. Se travar aqui, avance ou saia do assistente:
+   o app é criado mesmo com "Tipo de aplicativo: Nenhum", e isso **não é
+   problema**.
 
-6. Criado o app, vá em **Adicionar produto** e adicione **Instagram**.
+6. Se perguntar sobre portfólio empresarial, pode selecionar `Meditação Diária`
+   ou pular — tanto faz. A verificação de empresa só é cobrada para acesso
+   avançado, que não é o nosso caso.
+
+7. **Este é o passo que realmente importa.** No **Painel** do app, procure a
+   lista **"Produtos disponíveis"** e clique em **Configurar** na linha:
+
+   > **Graph API do Instagram** — *Permita que empresas e criadores de conteúdo
+   > publiquem e interajam com conteúdo, além de rastrear insights e hashtags.*
+
+   Atenção: o item **não** se chama apenas "Instagram" e fica perto do fim da
+   lista, entre "Pagamentos na web" e "Jobs". É fácil passar por cima dele.
+   Não precisa preencher nada na tela que abrir — basta o produto ficar
+   adicionado.
+
+> **Criou o app em duplicidade?** Acontece, porque o assistente permite sair e
+> recomeçar. Ter dois apps não quebra nada — o que quebra é misturar o App ID
+> de um com o App Secret do outro. Identifique qual tem o Graph API do
+> Instagram adicionado, e renomeie o outro para `ZZZ - NAO USAR`
+> (`Configurações > Básico > Nome de exibição`) ou exclua-o no fim dessa mesma
+> página.
+
+> **Adicionou um produto errado sem querer** (ex.: Central de Apps)? Deixe como
+> está. Produto não configurado não faz nada e não interfere em permissões,
+> token nem publicação.
 
 ## Passo 2 — Guardar App ID e App Secret
 
