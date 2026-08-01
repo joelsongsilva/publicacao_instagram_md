@@ -58,7 +58,9 @@ CSV_PADRAO = RAIZ / "conteudo" / "legendas.csv"
 LOG_PUBLICADOS = RAIZ / "logs" / "publicados.csv"
 
 FUSO = "America/Sao_Paulo"
-GRAPH_VERSION = os.getenv("GRAPH_API_VERSION", "v25.0")
+# `or` em vez do default de getenv: uma variavel definida porem VAZIA no .env
+# retorna "" e montaria uma URL invalida.
+GRAPH_VERSION = os.getenv("GRAPH_API_VERSION") or "v25.0"
 GRAPH_URL = f"https://graph.facebook.com/{GRAPH_VERSION}"
 
 # Quanto tempo esperar cada container terminar de processar
