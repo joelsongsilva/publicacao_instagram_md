@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """
-Publica o carrossel do dia (2 artes + legenda) no Instagram via Graph API oficial.
+Publica o carrossel do dia (2 slides + legenda) no Instagram via Graph API.
+
+Estrutura esperada (ver directives/publicar_instagram.md):
+
+    conteudo/2026-08.xlsx      colunas: dia (1-31) e legenda
+    imagens/2026-08-01.png     slide 1 - card da mensagem do dia
+    imagens/2026-08_link.png   slide 2 - card do link, o mesmo o mes inteiro
 
 Fluxo da API (a API do Instagram NAO agenda posts - quem agenda e o cron do
 GitHub Actions; este script publica no momento em que e chamado):
@@ -21,6 +27,7 @@ Uso:
 import argparse
 import csv
 import os
+import re
 import sys
 import time
 from datetime import datetime, date
@@ -54,10 +61,12 @@ for _stream in (sys.stdout, sys.stderr):
 # --------------------------------------------------------------------------
 
 RAIZ = Path(__file__).resolve().parent.parent
-CSV_PADRAO = RAIZ / "conteudo" / "legendas.csv"
+DIR_CONTEUDO = RAIZ / "conteudo"
+DIR_IMAGENS = RAIZ / "imagens"
 LOG_PUBLICADOS = RAIZ / "logs" / "publicados.csv"
 
 FUSO = "America/Sao_Paulo"
+
 # `or` em vez do default de getenv: uma variavel definida porem VAZIA no .env
 # retorna "" e montaria uma URL invalida.
 GRAPH_VERSION = os.getenv("GRAPH_API_VERSION") or "v25.0"
@@ -67,8 +76,10 @@ GRAPH_URL = f"https://graph.facebook.com/{GRAPH_VERSION}"
 TIMEOUT_CONTAINER_S = 180
 INTERVALO_POLL_S = 5
 
-# Nomes de coluna aceitos no CSV (case-insensitive, sem acento nao importa aqui
-# porque comparamos a string exata em minusculas)
+LIMITE_LEGENDA = 2200
+
+# Nomes de coluna aceitos (comparados em minusculas, sem espacos nas pontas)
+COLUNAS_DIA = ("dia", "day")
 COLUNAS_DATA = ("data", "data da publicacao", "data da publicação", "date")
 COLUNAS_LEGENDA = ("legenda", "caption", "descricao", "descrição")
 
@@ -97,7 +108,13 @@ def hoje_brasilia():
 
 def normalizar_data(valor):
     """Aceita 2026-08-15, 15/08/2026 ou 15-08-2026 e devolve 'YYYY-MM-DD'."""
-    valor = (valor or "").strip()
+    valor = str(valor or "").strip()
+    if not valor:
+        return None
+    # Celulas de data do Excel chegam como datetime
+    if isinstance(valor, (datetime, date)):
+        return valor.strftime("%Y-%m-%d")
+    valor = valor.split(" ")[0]  # descarta hora, se houver
     for formato in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%d/%m/%y"):
         try:
             return datetime.strptime(valor, formato).strftime("%Y-%m-%d")
@@ -106,54 +123,192 @@ def normalizar_data(valor):
     return None
 
 
+def como_inteiro(valor):
+    """'1', 1, 1.0 e '01' viram 1. Qualquer outra coisa vira None."""
+    if valor is None:
+        return None
+    if isinstance(valor, (int, float)) and float(valor).is_integer():
+        return int(valor)
+    m = re.match(r"^\s*(\d{1,2})\s*$", str(valor))
+    return int(m.group(1)) if m else None
+
+
 def achar_coluna(cabecalho, candidatos):
     for nome in cabecalho:
-        if nome and nome.strip().lower() in candidatos:
+        if nome and str(nome).strip().lower() in candidatos:
             return nome
     return None
 
 
 # --------------------------------------------------------------------------
-# Leitura do conteudo
+# Leitura do conteudo (.xlsx ou .csv)
 # --------------------------------------------------------------------------
 
-def ler_legenda(caminho_csv, data_alvo):
-    """Procura no CSV a linha da data e devolve a legenda ja tratada."""
-    if not caminho_csv.exists():
-        raise ErroPublicacao(
-            f"CSV nao encontrado: {caminho_csv}\n"
-            "Gere o conteudo do mes conforme directives/geracao_conteudo_sheets.md"
-        )
+def achar_arquivo_conteudo(data_alvo, explicito=None):
+    """Prioriza o arquivo do mes (2026-08.xlsx), com fallback para um arquivo
+    unico acumulando varios meses (legendas.csv)."""
+    if explicito:
+        caminho = Path(explicito)
+        if not caminho.exists():
+            raise ErroPublicacao(f"Arquivo de conteudo nao encontrado: {caminho}")
+        return caminho
 
-    # utf-8-sig remove o BOM que o Google Sheets coloca no inicio do arquivo
-    with open(caminho_csv, encoding="utf-8-sig", newline="") as f:
-        leitor = csv.DictReader(f)
-        if not leitor.fieldnames:
-            raise ErroPublicacao(f"CSV vazio ou sem cabecalho: {caminho_csv}")
-
-        col_data = achar_coluna(leitor.fieldnames, COLUNAS_DATA)
-        col_legenda = achar_coluna(leitor.fieldnames, COLUNAS_LEGENDA)
-
-        if not col_data or not col_legenda:
-            raise ErroPublicacao(
-                f"O CSV precisa ter uma coluna de data e uma de legenda.\n"
-                f"Cabecalho encontrado: {leitor.fieldnames}"
-            )
-
-        for linha in leitor:
-            if normalizar_data(linha.get(col_data)) == data_alvo:
-                legenda = (linha.get(col_legenda) or "").strip()
-                if not legenda:
-                    raise ErroPublicacao(
-                        f"A linha de {data_alvo} existe mas a legenda esta vazia."
-                    )
-                # O Sheets costuma exportar quebras de linha como \n literal
-                return legenda.replace("\\n", "\n")
+    ano_mes = data_alvo[:7]
+    candidatos = [
+        DIR_CONTEUDO / f"{ano_mes}.xlsx",
+        DIR_CONTEUDO / f"{ano_mes}.csv",
+        DIR_CONTEUDO / "legendas.xlsx",
+        DIR_CONTEUDO / "legendas.csv",
+    ]
+    for caminho in candidatos:
+        if caminho.exists():
+            return caminho
 
     raise ErroPublicacao(
-        f"Nenhuma linha para a data {data_alvo} em {caminho_csv.name}.\n"
-        "Confira se o conteudo do mes ja foi preenchido."
+        f"Nenhum arquivo de conteudo para {ano_mes}.\n"
+        "Procurei por:\n  " + "\n  ".join(str(c) for c in candidatos) + "\n"
+        "Gere o conteudo do mes conforme directives/geracao_conteudo_sheets.md"
     )
+
+
+def ler_planilha(caminho):
+    """Devolve (cabecalho, registros) de um .xlsx ou .csv."""
+    if caminho.suffix.lower() in (".xlsx", ".xlsm"):
+        try:
+            import openpyxl
+        except ImportError:
+            raise ErroPublicacao(
+                "Para ler .xlsx e preciso o openpyxl:\n"
+                "    pip install -r requirements.txt"
+            )
+        ws = openpyxl.load_workbook(caminho, data_only=True).worksheets[0]
+        linhas = list(ws.iter_rows(values_only=True))
+        if not linhas:
+            raise ErroPublicacao(f"Planilha vazia: {caminho}")
+        cabecalho = [str(c).strip() if c is not None else "" for c in linhas[0]]
+        registros = [dict(zip(cabecalho, linha)) for linha in linhas[1:]]
+        return cabecalho, registros
+
+    # utf-8-sig remove o BOM que o Google Sheets coloca no inicio do arquivo
+    with open(caminho, encoding="utf-8-sig", newline="") as f:
+        leitor = csv.DictReader(f)
+        if not leitor.fieldnames:
+            raise ErroPublicacao(f"CSV vazio ou sem cabecalho: {caminho}")
+        return list(leitor.fieldnames), list(leitor)
+
+
+def carregar_legendas(caminho):
+    """Devolve {'YYYY-MM-DD': legenda} a partir do arquivo.
+
+    Aceita dois formatos de identificacao da linha:
+      - coluna `data` com a data completa; ou
+      - coluna `dia` (1-31), caso em que o mes vem do NOME do arquivo.
+    """
+    cabecalho, registros = ler_planilha(caminho)
+
+    col_legenda = achar_coluna(cabecalho, COLUNAS_LEGENDA)
+    col_data = achar_coluna(cabecalho, COLUNAS_DATA)
+    col_dia = achar_coluna(cabecalho, COLUNAS_DIA)
+
+    if not col_legenda:
+        raise ErroPublicacao(
+            f"{caminho.name} nao tem coluna de legenda.\n"
+            f"Cabecalho encontrado: {cabecalho}"
+        )
+    if not col_data and not col_dia:
+        raise ErroPublicacao(
+            f"{caminho.name} precisa de uma coluna `data` (data completa) ou "
+            f"`dia` (1-31).\nCabecalho encontrado: {cabecalho}"
+        )
+
+    # Com coluna `dia`, o mes so pode vir do nome do arquivo (ex.: 2026-08.xlsx)
+    mes_do_arquivo = None
+    if col_dia and not col_data:
+        m = re.match(r"^(\d{4})-(\d{2})$", caminho.stem)
+        if not m:
+            raise ErroPublicacao(
+                f"{caminho.name} usa a coluna `dia`, entao o nome do arquivo\n"
+                f"precisa dizer de que mes ele e: `AAAA-MM{caminho.suffix}`\n"
+                f"(ex.: conteudo/2026-08{caminho.suffix}).\n"
+                "Renomeie o arquivo ou acrescente uma coluna `data` completa."
+            )
+        mes_do_arquivo = f"{m.group(1)}-{m.group(2)}"
+
+    legendas = {}
+    for linha in registros:
+        chave = None
+        if col_data:
+            chave = normalizar_data(linha.get(col_data))
+        if not chave and col_dia and mes_do_arquivo:
+            dia = como_inteiro(linha.get(col_dia))
+            if dia and 1 <= dia <= 31:
+                chave = f"{mes_do_arquivo}-{dia:02d}"
+        if not chave:
+            continue
+
+        legenda = str(linha.get(col_legenda) or "").strip()
+        # O Sheets/Excel costumam guardar quebras de linha como \n literal
+        legendas[chave] = legenda.replace("\\n", "\n")
+
+    if not legendas:
+        raise ErroPublicacao(
+            f"Nenhuma linha valida em {caminho.name}. "
+            "Confira as colunas de data/dia."
+        )
+    return legendas
+
+
+def ler_legenda(caminho, data_alvo):
+    legendas = carregar_legendas(caminho)
+    if data_alvo not in legendas:
+        raise ErroPublicacao(
+            f"Nenhuma linha para {data_alvo} em {caminho.name}.\n"
+            "Confira se o conteudo do mes ja foi preenchido."
+        )
+    legenda = legendas[data_alvo]
+    if not legenda:
+        raise ErroPublicacao(f"A linha de {data_alvo} existe mas a legenda esta vazia.")
+    return legenda
+
+
+# --------------------------------------------------------------------------
+# Resolucao das artes
+# --------------------------------------------------------------------------
+
+def resolver_imagens(data_alvo):
+    """Devolve os nomes dos arquivos dos dois slides.
+
+    Slide 1: a arte do dia.
+    Slide 2: o card do link. Normalmente e um so para o mes inteiro, mas um
+             arquivo especifico do dia tem prioridade se existir.
+    """
+    ano_mes = data_alvo[:7]
+
+    opcoes_slide1 = [f"{data_alvo}.png", f"{data_alvo}_1.png"]
+    opcoes_slide2 = [f"{data_alvo}_2.png", f"{ano_mes}_link.png", "card_link.png"]
+
+    def primeiro_existente(opcoes):
+        for nome in opcoes:
+            if (DIR_IMAGENS / nome).exists():
+                return nome
+        return None
+
+    slide1 = primeiro_existente(opcoes_slide1)
+    if not slide1:
+        raise ErroPublicacao(
+            f"Arte do dia {data_alvo} nao encontrada em imagens/.\n"
+            "Procurei por: " + ", ".join(opcoes_slide1)
+        )
+
+    slide2 = primeiro_existente(opcoes_slide2)
+    if not slide2:
+        raise ErroPublicacao(
+            f"Card do link nao encontrado em imagens/.\n"
+            "Procurei por: " + ", ".join(opcoes_slide2) + "\n"
+            f"Coloque o card do mes como imagens/{ano_mes}_link.png"
+        )
+
+    return [slide1, slide2]
 
 
 def ja_publicado(data_alvo):
@@ -236,8 +391,7 @@ def aguardar_container(container_id, token, rotulo):
     """Fica consultando ate o container terminar de processar."""
     limite = time.time() + TIMEOUT_CONTAINER_S
     while time.time() < limite:
-        dados = chamar_api("GET", container_id, token,
-                           fields="status_code,status")
+        dados = chamar_api("GET", container_id, token, fields="status_code,status")
         status = dados.get("status_code")
         if status == "FINISHED":
             return
@@ -309,9 +463,9 @@ def main():
     p = argparse.ArgumentParser(
         description="Publica o carrossel do dia no Instagram.")
     p.add_argument("--data", help="Data a publicar (YYYY-MM-DD). Padrao: hoje em Brasilia.")
-    p.add_argument("--csv", default=str(CSV_PADRAO), help="Caminho do CSV de conteudo.")
+    p.add_argument("--conteudo", help="Caminho do .xlsx/.csv. Padrao: conteudo/AAAA-MM.xlsx")
     p.add_argument("--dry-run", action="store_true",
-                   help="Valida tudo (CSV, artes, token) mas NAO publica.")
+                   help="Valida tudo (conteudo, artes, token) mas NAO publica.")
     p.add_argument("--forcar", action="store_true",
                    help="Publica mesmo que a data ja conste no log de publicados.")
     args = p.parse_args()
@@ -334,7 +488,7 @@ def main():
     # --- Credenciais ---------------------------------------------------
     ig_user_id = os.getenv("IG_USER_ID", "").strip()
     token = os.getenv("IG_ACCESS_TOKEN", "").strip()
-    base_url = os.getenv("BASE_URL_IMAGENS", "").strip().rstrip("/")
+    base_url = (os.getenv("BASE_URL_IMAGENS") or "").strip().rstrip("/")
 
     if not base_url:
         # No GitHub Actions da pra montar a URL sozinho
@@ -353,27 +507,33 @@ def main():
         )
 
     # --- Conteudo ------------------------------------------------------
-    legenda = ler_legenda(Path(args.csv), data_alvo)
-    log(f"\nLegenda ({len(legenda)} caracteres):")
+    arquivo = achar_arquivo_conteudo(data_alvo, args.conteudo)
+    log(f"\nConteudo: {arquivo.name}")
+    legenda = ler_legenda(arquivo, data_alvo)
+    log(f"Legenda ({len(legenda)} caracteres):")
     log("-" * 60)
     log(legenda[:400] + ("..." if len(legenda) > 400 else ""))
     log("-" * 60)
 
-    if len(legenda) > 2200:
+    if len(legenda) > LIMITE_LEGENDA:
         raise ErroPublicacao(
-            f"Legenda com {len(legenda)} caracteres. O Instagram aceita no maximo 2200."
+            f"Legenda com {len(legenda)} caracteres. "
+            f"O Instagram aceita no maximo {LIMITE_LEGENDA}."
         )
 
     # --- Artes ---------------------------------------------------------
-    urls = [f"{base_url}/{data_alvo}_{n}.png" for n in (1, 2)] if base_url else []
+    nomes = resolver_imagens(data_alvo)
     log("\nArtes:")
-    for url in urls:
-        log(f"  {url}")
-        conferir_url_publica(url)
-        log("    OK - acessivel publicamente")
-
-    if not urls:
-        log("  (sem BASE_URL_IMAGENS definida - checagem de artes pulada)")
+    urls = []
+    for i, nome in enumerate(nomes, start=1):
+        if base_url:
+            url = f"{base_url}/{nome}"
+            log(f"  slide {i}: {url}")
+            conferir_url_publica(url)
+            log("           OK - acessivel publicamente")
+            urls.append(url)
+        else:
+            log(f"  slide {i}: {nome}  (local OK; sem BASE_URL_IMAGENS para checar)")
 
     # --- Publicacao ----------------------------------------------------
     if args.dry_run:

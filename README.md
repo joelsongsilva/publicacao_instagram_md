@@ -38,13 +38,16 @@ Zero. GitHub Actions é gratuito e a API de publicação do Instagram também.
 ## Estrutura
 
 ```
-conteudo/legendas.csv     conteúdo do mês (colunas Data + Legenda)
-imagens/                  artes renomeadas YYYY-MM-DD_1.png / _2.png
+conteudo/2026-08.xlsx     conteúdo do mês (colunas: dia + legenda)
+imagens/2026-08-01.png    card de cada dia (slide 1)
+imagens/2026-08_link.png  card do link, o mesmo o mês inteiro (slide 2)
 execution/                scripts Python
 logs/publicados.csv       o que já foi ao ar (trava anti-duplicidade)
 directives/               os passo a passo
 .github/workflows/        o agendador
 ```
+
+O card do link **não é duplicado**: um arquivo por mês serve os 31 dias.
 
 ## Scripts
 
@@ -56,7 +59,7 @@ python execution/publicar_carrossel.py --dry-run
 python execution/publicar_carrossel.py --data 2026-08-15
 
 # Ver se falta material nos próximos 31 dias
-python execution/conferir_agenda.py --dias 31
+python execution/conferir_agenda.py --dias 31 --inicio 2026-08-01
 
 # Conferir se o token continua vivo
 python execution/verificar_token.py

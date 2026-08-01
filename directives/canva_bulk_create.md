@@ -33,17 +33,21 @@ Transformar os dados gerados pela IA (que agora estão no Google Sheets) em 60 i
    - Clique em **Compartilhar -> Baixar**.
    - Escolha **PNG** e marque todas as páginas. O Canva vai baixar um arquivo `.zip`.
    - Extraia o `.zip` dentro da pasta `.tmp/imagens_canva` deste projeto.
-   - O Canva exporta como `1.png`, `2.png`... A automação precisa da data no nome. Rode o script para renomear em massa (`--start_date` é o **primeiro dia do mês** que você gerou):
+   - O export tem **uma página por dia + a página final do card do link**
+     (ex.: 32 páginas para um mês de 31 dias). O Canva nomeia como `1.png`,
+     `2.png`, ..., `32.png`.
+   - Rode o script, que renomeia e já move tudo para `imagens/`:
      ```bash
-     python execution/renomeador_imagens.py --dir ".tmp/imagens_canva" --start_date "2026-08-01"
+     python execution/renomeador_imagens.py --dir ".tmp/imagens_canva" --mes 2026-08
      ```
-   - Confira que o resultado ficou `2026-08-01_1.png`, `2026-08-01_2.png`, `2026-08-02_1.png`...
+   - Resultado: `2026-08-01.png` ... `2026-08-31.png` e `2026-08_link.png`.
+     O script confere sozinho se a quantidade de páginas bate com os dias do
+     mês e avisa se algo saiu incompleto.
 
-7. **Mova para `imagens/` e confira**:
-   - Mova (não copie) os arquivos renomeados de `.tmp/imagens_canva` para a pasta **`imagens/`** do projeto.
-   - Coloque o CSV do mês em `conteudo/legendas.csv`.
+7. **Coloque a planilha e confira**:
+   - Salve a planilha do mês como `conteudo/2026-08.xlsx` (o nome define o mês).
    - Rode a conferência antes de subir:
      ```bash
-     python execution/conferir_agenda.py --dias 31
+     python execution/conferir_agenda.py --dias 31 --inicio 2026-08-01
      ```
    - Estando tudo `ok`, siga para `directives/publicar_instagram.md` (passo 5).

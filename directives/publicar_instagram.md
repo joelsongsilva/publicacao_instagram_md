@@ -26,22 +26,41 @@ Siga `directives/canva_bulk_create.md` — inclusive a etapa de renomear com
 
 ### 3. Colocar tudo no repositório
 
-- As artes renomeadas vão para a pasta **`imagens/`**
-  (nomes `YYYY-MM-DD_1.png` e `YYYY-MM-DD_2.png`).
-- O CSV do mês vai para **`conteudo/legendas.csv`**, com no mínimo as colunas
-  `Data` e `Legenda`. As demais colunas podem ficar, são ignoradas.
+**A planilha** vai para `conteudo/AAAA-MM.xlsx` (ex.: `conteudo/2026-08.xlsx`).
 
-> Você pode acumular vários meses no mesmo `legendas.csv` ou substituir o
-> arquivo a cada mês. Tanto faz — o script busca pela data.
+- `.xlsx` é o formato preferido: preserva emojis sem risco de codificação.
+  `.csv` também funciona, desde que salvo em **UTF-8**.
+- Precisa das colunas **`dia`** (1 a 31) e **`legenda`**. As demais
+  (`titulo`, `mensagem`, `versiculo`...) podem ficar — são ignoradas aqui,
+  pois só servem ao Canva.
+- **O nome do arquivo define o mês.** Com a coluna `dia`, é ele que diz se
+  o "dia 5" é agosto ou setembro. Por isso `2026-08.xlsx`, não `agosto.xlsx`.
+- Alternativa: uma coluna `data` com a data completa. Aí o nome do arquivo
+  deixa de importar e dá para acumular vários meses num arquivo só.
+
+**As artes** vão para `imagens/`:
+
+```
+2026-08-01.png  ...  2026-08-31.png    o card de cada dia (slide 1)
+2026-08_link.png                       o card do link (slide 2)
+```
+
+> **O card do link não precisa ser duplicado.** Um único arquivo por mês é
+> reutilizado automaticamente nos 31 dias — é o mesmo gesto que você fazia no
+> Business Suite ao anexar sempre o mesmo último card.
+>
+> Se algum dia precisar de um slide 2 diferente, basta criar
+> `2026-08-15_2.png`: um arquivo específico do dia tem prioridade sobre o
+> card do mês.
 
 ### 4. Conferir antes de subir
 
 ```bash
-python execution/conferir_agenda.py --dias 31
+python execution/conferir_agenda.py --dias 31 --inicio 2026-08-01
 ```
 
-Ele lista dia a dia o que está faltando (linha no CSV, legenda vazia, arte
-ausente). Só suba quando estiver tudo `ok`.
+Ele lista dia a dia o que está faltando (linha na planilha, legenda vazia,
+arte ausente). Só suba quando estiver tudo `ok`.
 
 ### 5. Enviar para o GitHub
 
