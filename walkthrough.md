@@ -116,11 +116,11 @@ por ser o mais concorrido.
 
 Solucao adotada, em duas camadas:
 
-1. **Agendar cedo e esperar.** O cron principal roda as 04:07 BRT; o script
+1. **Agendar cedo e esperar.** O cron principal roda as 03:37 BRT; o script
    valida tudo e so entao dorme ate as 05:00 (`--aguardar-ate`). O atraso do
-   agendador e absorvido dentro dessa folga de 53 min. Se acordar depois das
-   05:00, publica imediatamente.
-2. **Horarios de reforco** as 04:37 e 05:07, com minutos quebrados para pegar
+   agendador e absorvido dentro dessa folga de 83 min, acima do pior atraso ja
+   medido (72 min). Se acordar depois das 05:00, publica imediatamente.
+2. **Horarios de reforco** as 04:07 e 04:37, com minutos quebrados para pegar
    fila menor. A trava anti-duplicidade impede post repetido.
 
 A espera vem **depois** da validacao de conteudo e artes: se algo estiver

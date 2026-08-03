@@ -45,7 +45,7 @@ Você não precisa mais abrir o Meta Business Suite para agendar. O trabalho pas
                  ▼
    5. git add / commit / push  ─────────────►  GitHub (o "original" do projeto)
                                                        │
-                                                       │  cron: 05:00 todo dia
+                                                       │  acorda 03:37, publica 05:00
                                                        ▼
                                               publicar_carrossel.py
                                                        │
@@ -117,17 +117,17 @@ Você **não precisa acompanhar**. O sistema só te procura quando há problema.
 
 ### Como a pontualidade é garantida
 
-O agendador do GitHub é impreciso — mede-se atraso de 50 a 70 minutos em
+O agendador do GitHub é impreciso — medimos atrasos de 51 e 72 minutos em
 horários de pico. Por isso o sistema **não confia** nele para acertar a hora:
 
-1. O robô acorda às **04:07**, valida a planilha e as artes.
+1. O robô acorda às **03:37**, valida a planilha e as artes.
 2. Depois de validar, **aguarda até as 05:00 em ponto** para publicar.
 3. Se o robô acordar atrasado (depois das 05:00), publica na hora — atrasado é
    melhor que não publicado.
-4. Há dois horários de reforço (**04:37** e **05:07**) caso o primeiro falhe.
+4. Há dois horários de reforço (**04:07** e **04:37**) caso o primeiro falhe.
    A trava anti-duplicidade impede post repetido.
 
-Na prática: o post sai às 05:00, e só atrasa se o GitHub atrasar mais de 53
+Na prática: o post sai às 05:00, e só atrasa se o GitHub atrasar mais de 83
 minutos.
 
 > **Se um dia não vir o post logo cedo, não conclua que falhou.** Confira em

@@ -82,7 +82,7 @@ LIMITE_LEGENDA = 2200
 # 50 a 70 min em 08:00 UTC). A estrategia e agendar CEDO e esperar aqui ate a
 # hora certa. Se a espera necessaria passar deste teto, assumimos que nao e o
 # cenario previsto (ex.: execucao manual fora de hora) e publicamos na hora.
-MAX_ESPERA_S = 75 * 60
+MAX_ESPERA_S = 100 * 60
 
 # Nomes de coluna aceitos (comparados em minusculas, sem espacos nas pontas)
 COLUNAS_DIA = ("dia", "day")
