@@ -108,6 +108,24 @@ explicitamente que falta `business_management`.
 - O console do Windows usa cp1252 e quebrava ao imprimir os emojis das
   legendas. A saída passou a ser forçada para UTF-8.
 
+### Pontualidade do cron
+
+O agendador do GitHub Actions nao garante horario: medimos atrasos de 51 min
+(02/08) e 72 min (03/08) com `cron: "0 8 * * *"`. Hora cheia e o pior horario,
+por ser o mais concorrido.
+
+Solucao adotada, em duas camadas:
+
+1. **Agendar cedo e esperar.** O cron principal roda as 04:07 BRT; o script
+   valida tudo e so entao dorme ate as 05:00 (`--aguardar-ate`). O atraso do
+   agendador e absorvido dentro dessa folga de 53 min. Se acordar depois das
+   05:00, publica imediatamente.
+2. **Horarios de reforco** as 04:37 e 05:07, com minutos quebrados para pegar
+   fila menor. A trava anti-duplicidade impede post repetido.
+
+A espera vem **depois** da validacao de conteudo e artes: se algo estiver
+errado, o erro aparece imediatamente, e nao apos uma hora parado.
+
 ## 4. Rede de segurança
 
 | Script | Papel |

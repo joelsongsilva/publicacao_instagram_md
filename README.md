@@ -95,7 +95,7 @@ python execution/obter_token.py --token-curto "EAAG..."
 
 | Workflow | Quando | O que faz |
 |---|---|---|
-| `publicar.yml` | Diário, 05:00 BRT | Publica o carrossel do dia |
+| `publicar.yml` | Diário, 05:00 BRT | Publica o carrossel do dia (acorda 04:07 e aguarda a hora certa) |
 | `verificar-token.yml` | Segundas, 09:00 BRT | Confere o token e se há conteúdo para 7 dias |
 
 Ambos também podem ser acionados manualmente em **Actions → Run workflow**.

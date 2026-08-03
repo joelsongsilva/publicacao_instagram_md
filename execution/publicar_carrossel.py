@@ -78,6 +78,12 @@ INTERVALO_POLL_S = 5
 
 LIMITE_LEGENDA = 2200
 
+# O agendador do GitHub Actions atrasa execucoes em horario de pico (medimos
+# 50 a 70 min em 08:00 UTC). A estrategia e agendar CEDO e esperar aqui ate a
+# hora certa. Se a espera necessaria passar deste teto, assumimos que nao e o
+# cenario previsto (ex.: execucao manual fora de hora) e publicamos na hora.
+MAX_ESPERA_S = 75 * 60
+
 # Nomes de coluna aceitos (comparados em minusculas, sem espacos nas pontas)
 COLUNAS_DIA = ("dia", "day")
 COLUNAS_DATA = ("data", "data da publicacao", "data da publicação", "date")
@@ -443,6 +449,43 @@ def publicar(ig_user_id, token, urls_imagens, legenda):
     return post_id, permalink
 
 
+def aguardar_ate(hora_alvo):
+    """Segura a publicacao ate `hora_alvo` (HH:MM no fuso de Brasilia).
+
+    Existe porque o cron do GitHub Actions e impreciso: agendamos com folga e
+    e aqui que a pontualidade e recuperada. Se ja passou da hora, publica
+    imediatamente - atrasado e melhor que nao publicado.
+    """
+    m = re.match(r"^([01]?\d|2[0-3]):([0-5]\d)$", hora_alvo.strip())
+    if not m:
+        raise ErroPublicacao(f"--aguardar-ate invalido: {hora_alvo}. Use HH:MM.")
+    hora, minuto = int(m.group(1)), int(m.group(2))
+
+    tz = ZoneInfo(FUSO) if ZoneInfo else None
+    try:
+        agora = datetime.now(tz)
+    except Exception:
+        agora = datetime.now()
+
+    alvo = agora.replace(hour=hora, minute=minuto, second=0, microsecond=0)
+    espera = (alvo - agora).total_seconds()
+
+    if espera <= 0:
+        log(f"  Horario alvo {hora_alvo} ja passou (agora {agora:%H:%M}). "
+            f"Publicando com {abs(int(espera)) // 60} min de atraso.")
+        return
+
+    if espera > MAX_ESPERA_S:
+        log(f"  Faltam {int(espera) // 60} min para {hora_alvo} - espera longa "
+            "demais para ser o cron diario. Publicando agora.")
+        return
+
+    log(f"  Agora sao {agora:%H:%M}. Aguardando {int(espera) // 60} min "
+        f"{int(espera) % 60}s ate {hora_alvo}...")
+    time.sleep(espera)
+    log("  Hora certa. Publicando.")
+
+
 def conferir_limite(ig_user_id, token):
     """Informativo: quantos posts ja foram feitos pela API nas ultimas 24h."""
     try:
@@ -468,6 +511,10 @@ def main():
                    help="Valida tudo (conteudo, artes, token) mas NAO publica.")
     p.add_argument("--forcar", action="store_true",
                    help="Publica mesmo que a data ja conste no log de publicados.")
+    p.add_argument("--aguardar-ate", metavar="HH:MM",
+                   help="Valida tudo e so entao aguarda ate este horario de "
+                        "Brasilia para publicar. Compensa o atraso do cron do "
+                        "GitHub Actions. Ignorado se a hora ja passou.")
     args = p.parse_args()
 
     data_alvo = args.data or hoje_brasilia().strftime("%Y-%m-%d")
@@ -537,10 +584,18 @@ def main():
 
     # --- Publicacao ----------------------------------------------------
     if args.dry_run:
+        if args.aguardar_ate:
+            log(f"\n(fora do dry-run, aguardaria ate {args.aguardar_ate} "
+                "antes de publicar)")
         log("\nDRY-RUN: tudo validado, nada foi publicado.")
         return 0
 
+    # A espera vem DEPOIS da validacao: se algo estiver errado, e melhor
+    # descobrir agora do que depois de uma hora parado.
     log("")
+    if args.aguardar_ate:
+        aguardar_ate(args.aguardar_ate)
+
     conferir_limite(ig_user_id, token)
     post_id, permalink = publicar(ig_user_id, token, urls, legenda)
     registrar_publicacao(data_alvo, post_id, permalink)

@@ -2,12 +2,22 @@ name: Publicar carrossel do dia
 
 on:
   schedule:
-    # 08:00 UTC = 05:00 no horario de Brasilia (o Brasil nao tem mais horario de verao).
-    # Obs.: o agendador do GitHub pode atrasar alguns minutos em horarios de pico.
-    - cron: "0 8 * * *"
+    # O agendador do GitHub e impreciso: em horario de pico medimos atrasos de
+    # 50 a 70 minutos. Duas defesas contra isso:
+    #
+    #   1. Agendamos CEDO (04:07 BRT) e o script espera ate as 05:00 para
+    #      publicar (--aguardar-ate). Assim o atraso do cron e absorvido e o
+    #      post sai no horario certo.
+    #   2. Dois horarios de reforco, caso o primeiro atrase demais ou falhe.
+    #      A trava anti-duplicidade (logs/publicados.csv) impede post repetido.
+    #
+    # Minutos "quebrados" de proposito: a fila em hora cheia e bem maior.
+    - cron: "7 7 * * *"    # 04:07 BRT - principal, espera ate 05:00
+    - cron: "37 7 * * *"   # 04:37 BRT - reforco 1
+    - cron: "7 8 * * *"    # 05:07 BRT - reforco 2
 
   # Permite disparar manualmente pela aba Actions (util para testes e para
-  # republicar um dia que falhou).
+  # republicar um dia que falhou). Execucao manual publica na hora, sem espera.
   workflow_dispatch:
     inputs:
       data:
@@ -37,7 +47,9 @@ concurrency:
 jobs:
   publicar:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Generoso porque a execucao principal fica ate ~53 min aguardando as
+    # 05:00. Repositorio publico tem minutos de Actions ilimitados.
+    timeout-minutes: 90
 
     steps:
       - name: Baixar o repositorio
@@ -63,11 +75,14 @@ jobs:
           IN_DATA: ${{ inputs.data }}
           IN_DRY_RUN: ${{ inputs.dry_run }}
           IN_FORCAR: ${{ inputs.forcar }}
+          EVENTO: ${{ github.event_name }}
         run: |
           ARGS=()
           if [ -n "$IN_DATA" ]; then ARGS+=(--data "$IN_DATA"); fi
           if [ "$IN_DRY_RUN" = "true" ]; then ARGS+=(--dry-run); fi
           if [ "$IN_FORCAR" = "true" ]; then ARGS+=(--forcar); fi
+          # So o cron espera pelo horario. Execucao manual publica na hora.
+          if [ "$EVENTO" = "schedule" ]; then ARGS+=(--aguardar-ate "05:00"); fi
           echo "Executando: publicar_carrossel.py ${ARGS[*]}"
           python execution/publicar_carrossel.py "${ARGS[@]}"
 
@@ -82,4 +97,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add logs/
           git commit -m "log: publicacao de $(TZ=America/Sao_Paulo date +%Y-%m-%d)"
+          # Outra execucao pode ter gravado antes; rebase evita conflito
+          git pull --rebase --autostash
           git push
