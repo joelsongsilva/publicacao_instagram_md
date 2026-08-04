@@ -1,7 +1,13 @@
 # Resumo Executivo — Publicação Automática no Instagram
 
 > Documento de consulta rápida. Se você esqueceu como algo funciona, comece por aqui.
-> **Pasta do projeto:** `C:\projetos\publicacao_instagram_md`
+>
+> **Pasta local:** `C:\projetos\publicacao_instagram_md`
+> **Original na nuvem:** https://github.com/joelsongsilva/publicacao_instagram_md
+>
+> A pasta local é uma cópia de trabalho; o que vale é o GitHub. Rode `git pull`
+> antes de mexer — o robô grava o log de publicação lá todo dia.
+> Nunca guarde o projeto no OneDrive: a sincronização corrompe a pasta `.git`.
 
 ---
 

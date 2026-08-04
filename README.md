@@ -11,6 +11,37 @@ Business Suite.
 **Status:** em produção desde 01/08/2026.
 Primeiro post automático: https://www.instagram.com/p/DbfeUspkbrV/
 
+## Onde o projeto fica
+
+**Pasta de trabalho local:** `C:\projetos\publicacao_instagram_md`
+
+**Original (fonte da verdade):** https://github.com/joelsongsilva/publicacao_instagram_md
+
+A pasta local é apenas uma cópia de trabalho — pode ser apagada e recriada a
+qualquer momento com `git clone`. O que não pode ser perdido está no GitHub.
+
+O único arquivo que **não viaja pelo Git** é o `.env`, que contém as
+credenciais. Se recriar a pasta do zero, copie-o manualmente para dentro dela.
+
+> **Não coloque o projeto no OneDrive** (nem no Google Drive ou Dropbox). A
+> sincronização em tempo real disputa os arquivos da pasta `.git` com o próprio
+> Git e pode corromper o repositório. O backup já é o GitHub, a cada `git push`.
+
+### Antes de começar a mexer
+
+```bash
+cd C:\projetos\publicacao_instagram_md
+git pull                # traz o logs/publicados.csv que o robô gravou
+git log --oneline -1    # confere se bate com o último commit no GitHub
+```
+
+O `git pull` é hábito diário: o robô grava o log de publicação no repositório
+todos os dias, então sua pasta local fica um commit atrás. Sem o pull, o
+próximo `git push` dá conflito.
+
+**Na dúvida sobre qual pasta está aberta**, confira se o `resumo_executivo.md`
+aparece na raiz e se o `git log --oneline -1` bate com o GitHub.
+
 ## Como funciona
 
 ```
