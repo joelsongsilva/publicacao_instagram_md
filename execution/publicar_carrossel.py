@@ -28,6 +28,7 @@ import argparse
 import csv
 import os
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime, date
@@ -327,6 +328,27 @@ def ja_publicado(data_alvo):
     return None
 
 
+def atualizar_log_do_git():
+    """Traz o commit mais recente de logs/publicados.csv antes da checagem
+    final anti-duplicidade.
+
+    Existe porque o `concurrency` do GitHub Actions e o unico obstaculo entre
+    o checkout desta execucao e outra execucao paralela publicando o mesmo
+    dia - e ja falhou em prevenir duplicidade (dois posts saíram com 36s de
+    diferenca em 2026-08-05). A checagem em `main()` acontece logo no inicio,
+    antes de ate 83 min de espera (`--aguardar-ate`); sem atualizar o log
+    aqui, a checagem inicial fica obsoleta bem antes da publicacao de fato.
+    Best-effort: se nao houver git/rede, segue com o log que ja tem em disco.
+    """
+    try:
+        subprocess.run(
+            ["git", "-C", str(RAIZ), "pull", "--ff-only", "--quiet"],
+            timeout=30, capture_output=True, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+
 def registrar_publicacao(data_alvo, post_id, permalink):
     LOG_PUBLICADOS.parent.mkdir(parents=True, exist_ok=True)
     novo = not LOG_PUBLICADOS.exists()
@@ -595,6 +617,19 @@ def main():
     log("")
     if args.aguardar_ate:
         aguardar_ate(args.aguardar_ate)
+
+    # --- Trava anti-duplicidade, de novo ------------------------------
+    # A checagem la em cima pode ter ate 83 min de defasagem (a espera de
+    # --aguardar-ate). Atualiza o log a partir do git e confere outra vez,
+    # bem antes de chamar a API, para fechar essa janela.
+    if not args.forcar:
+        atualizar_log_do_git()
+        anterior = ja_publicado(data_alvo)
+        if anterior:
+            log(f"\nJa publicado em {data_alvo} (post {anterior}) por outra "
+                "execucao enquanto esta aguardava. Abortando para evitar "
+                "duplicidade.")
+            return 0
 
     conferir_limite(ig_user_id, token)
     post_id, permalink = publicar(ig_user_id, token, urls, legenda)
