@@ -99,6 +99,22 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add logs/
           git commit -m "log: publicacao de $(TZ=America/Sao_Paulo date +%Y-%m-%d)"
-          # Outra execucao pode ter gravado antes; rebase evita conflito
-          git pull --rebase --autostash
-          git push
+
+          # O post ja foi ao ar; se o push falhar aqui, o log fica sem o
+          # registro e a trava anti-duplicidade (logs/publicados.csv) perde o
+          # efeito para a proxima execucao do dia. Por isso ha retry: novas
+          # tentativas de "pull --rebase" cobrem o caso de outra execucao ter
+          # empurrado algo entre o nosso pull e o nosso push.
+          tentativas=5
+          ate_a_ultima=$((tentativas - 1))
+          for i in $(seq 0 $ate_a_ultima); do
+            if git pull --rebase --autostash && git push; then
+              echo "Log publicado no repositorio."
+              exit 0
+            fi
+            echo "Push falhou (tentativa $((i + 1))/$tentativas)."
+            sleep $((5 + RANDOM % 10))
+          done
+
+          echo "::error::Nao foi possivel registrar a publicacao de hoje em logs/publicados.csv apos $tentativas tentativas. O post JA FOI PUBLICADO no Instagram, mas a trava anti-duplicidade nao foi atualizada - proximas execucoes do dia podem publicar de novo. Registre manualmente ou rode com --forcar=false apos investigar."
+          exit 1
