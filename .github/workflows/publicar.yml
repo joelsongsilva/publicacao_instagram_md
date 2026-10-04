@@ -5,16 +5,18 @@ on:
     # O agendador do GitHub e impreciso: em horario de pico medimos atrasos de
     # 50 a 70 minutos. Duas defesas contra isso:
     #
-    #   1. Agendamos CEDO (03:37 BRT) e o script espera ate as 05:00 para
+    #   1. Agendamos logo apos a meia-noite (00:07 BRT) e o script espera ate
+    #      as 05:00 para
     #      publicar (--aguardar-ate). Assim o atraso do cron e absorvido e o
     #      post sai no horario certo.
     #   2. Dois horarios de reforco, caso o primeiro atrase demais ou falhe.
     #      A trava anti-duplicidade (logs/publicados.csv) impede post repetido.
     #
-    # A folga de 83 min foi dimensionada acima do pior atraso ja medido (72 min
-    # em 03/08). Horarios mais cedo em UTC tambem pegam fila menor, e os
-    # minutos "quebrados" evitam a hora cheia, que e a mais disputada.
-    - cron: "37 6 * * *"   # 03:37 BRT - principal, espera ate 05:00 (folga 83 min)
+    # A folga da execucao principal e de 4h53. Os atrasos de setembro chegaram
+    # a varias horas; iniciar cedo permite que a espera no proprio runner
+    # absorva essa fila. Os minutos "quebrados" evitam a hora cheia, que e a
+    # mais disputada.
+    - cron: "7 3 * * *"    # 00:07 BRT - principal, espera ate 05:00 (folga 293 min)
     - cron: "7 7 * * *"    # 04:07 BRT - reforco 1 (folga 53 min)
     - cron: "37 7 * * *"   # 04:37 BRT - reforco 2 (folga 23 min)
 
@@ -49,9 +51,9 @@ concurrency:
 jobs:
   publicar:
     runs-on: ubuntu-latest
-    # Generoso porque a execucao principal fica ate ~83 min aguardando as
-    # 05:00. Repositorio publico tem minutos de Actions ilimitados.
-    timeout-minutes: 120
+    # A execucao principal pode aguardar ate ~293 min pelas 05:00. O limite de
+    # 360 min e o maximo permitido para jobs hospedados pelo GitHub.
+    timeout-minutes: 360
 
     steps:
       - name: Baixar o repositorio

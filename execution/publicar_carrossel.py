@@ -80,10 +80,10 @@ INTERVALO_POLL_S = 5
 LIMITE_LEGENDA = 2200
 
 # O agendador do GitHub Actions atrasa execucoes em horario de pico (medimos
-# 50 a 70 min em 08:00 UTC). A estrategia e agendar CEDO e esperar aqui ate a
-# hora certa. Se a espera necessaria passar deste teto, assumimos que nao e o
-# cenario previsto (ex.: execucao manual fora de hora) e publicamos na hora.
-MAX_ESPERA_S = 100 * 60
+# varias horas. A estrategia e agendar pouco apos a meia-noite e esperar aqui
+# ate a hora certa. O teto comporta a espera da execucao principal (00:07 ->
+# 05:00), mas ainda evita que uma execucao manual acidental fique bloqueada.
+MAX_ESPERA_S = 330 * 60
 
 # Nomes de coluna aceitos (comparados em minusculas, sem espacos nas pontas)
 COLUNAS_DIA = ("dia", "day")
