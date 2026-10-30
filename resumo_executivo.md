@@ -84,11 +84,12 @@ cd C:\projetos\publicacao_instagram_md
 | 1 | Gerar o conteúdo do mês | Prompt de IA — ver `directives/geracao_conteudo_sheets.md` |
 | 2 | Salvar a planilha | Salve como `conteudo/AAAA-MM.xlsx` (ex.: `conteudo/2026-11.xlsx`). **O nome define o mês.** |
 | 3 | Gerar e exportar as artes | No Canva, use Criar em lote; baixe todas as páginas em PNG e extraia o ZIP em `imagens_canva/` na raiz do projeto. Mantenha `1.png`, `2.png`, etc. |
-| 4 | Renomear e mover as artes | `python execution/renomeador_imagens.py --dir "imagens_canva" --mes 2026-11` — o script move os arquivos para `imagens/` e dá os nomes finais. |
-| 5 | Conferir | `python execution/conferir_agenda.py --dias 30 --inicio 2026-11-01` |
-| 6 | Entregar | `git add conteudo imagens` &nbsp;→&nbsp; `git commit -m "conteudo de novembro/2026"` &nbsp;→&nbsp; `git push` |
+| 4 | Preparar e conferir | `python execution/preparar_mes.py --mes 2026-11` — verifica a planilha, renomeia e move as artes, depois valida todos os dias. |
+| 5 | Entregar | Se a validação estiver aprovada: `python execution/preparar_mes.py --mes 2026-11 --enviar` — faz o commit e o envio ao GitHub. |
 
-Só avance do passo 5 para o 6 quando **todos os dias** aparecerem como `ok`.
+**Comando único para preparar:** `python execution/preparar_mes.py --mes AAAA-MM`.
+Ele para ao encontrar qualquer problema. Só use `--enviar` após aparecer
+`Material validado para o mês inteiro`.
 
 **Regra simples das pastas:** a planilha fica em `conteudo/`; o ZIP extraído
 do Canva, ainda com os nomes numéricos, fica primeiro em `imagens_canva/`; e

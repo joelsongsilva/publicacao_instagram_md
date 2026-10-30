@@ -65,7 +65,7 @@ de arquivo).
 A API do Instagram **não agenda posts**. Quem faz o papel de agendador é o cron
 do GitHub Actions; o script publica no instante em que é chamado.
 
-### Adicionar um mês: pastas e comandos
+### Adicionar um mês: um comando
 
 Após criar o conteúdo e as artes no Canva, siga esta ordem. Os arquivos com
 nomes `1.png`, `2.png`, etc. **não** devem ser colocados diretamente em
@@ -76,31 +76,24 @@ nomes `1.png`, `2.png`, etc. **não** devem ser colocados diretamente em
 2. No Canva, exporte todas as páginas como **PNG**. Extraia o ZIP inteiro em
    `imagens_canva/`, na raiz do projeto. Essa é apenas a pasta de entrada;
    mantenha os nomes originais `1.png`, `2.png`, etc.
-3. No PowerShell, estando na raiz do projeto, execute:
+3. No PowerShell, estando na raiz do projeto, execute **um único comando**:
 
    ```powershell
-   python execution/renomeador_imagens.py --dir "imagens_canva" --mes 2026-11
+   python execution/preparar_mes.py --mes 2026-11
    ```
 
-   O script verifica a quantidade, move as artes para `imagens/` e as renomeia
-   para `2026-11-01.png` até `2026-11-30.png`; a última imagem vira
-   `2026-11_link.png`.
-4. Valide antes de enviar:
+   Ele confere a planilha, conta e renomeia as artes, move-as para `imagens/` e
+   valida todos os dias do mês. Se uma etapa falhar, ele para e informa o que
+   está faltando. Também pode ser executado de novo com segurança: se as artes
+   já estiverem em `imagens/`, a renomeação é ignorada.
+4. Se o resultado for `Material validado para o mês inteiro`, envie tudo ao
+   GitHub com o mesmo comando acrescido de `--enviar`:
 
    ```powershell
-   python execution/conferir_agenda.py --dias 30 --inicio 2026-11-01
+   python execution/preparar_mes.py --mes 2026-11 --enviar
    ```
 
-5. Somente se todos os dias estiverem como `ok`, envie a planilha e as artes ao
-   GitHub:
-
-   ```powershell
-   git add conteudo imagens
-   git commit -m "conteudo de novembro/2026"
-   git push
-   ```
-
-Depois do comando do passo 3, `imagens_canva/` fica vazia: isso é esperado,
+Depois da primeira execução, `imagens_canva/` fica vazia: isso é esperado,
 pois os arquivos foram movidos para `imagens/`.
 
 ## Custo
