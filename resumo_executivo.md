@@ -33,11 +33,13 @@ Você não precisa mais abrir o Meta Business Suite para agendar. O trabalho pas
       └─> planilha do mês
           (dia, titulo, mensagem,
            versiculo, legenda)
+          salvar como conteudo/AAAA-MM.xlsx
                  │
                  ▼
    2. Canva → Criar em lote
-      └─> 32 páginas PNG
-          (31 dias + card do link)
+      └─> exportar todas as páginas em PNG
+          extrair o ZIP em imagens_canva/
+          (1.png, 2.png, ..., último card de link)
                  │
                  ▼
    3. renomeador_imagens.py
@@ -51,7 +53,7 @@ Você não precisa mais abrir o Meta Business Suite para agendar. O trabalho pas
                  ▼
    5. git add / commit / push  ─────────────►  GitHub (o "original" do projeto)
                                                        │
-                                                       │  acorda 03:37, publica 05:00
+                                                       │  inicia 00:07, publica 05:00
                                                        ▼
                                               publicar_carrossel.py
                                                        │
@@ -80,13 +82,18 @@ cd C:\projetos\publicacao_instagram_md
 | # | Passo | Comando / ação |
 |---|---|---|
 | 1 | Gerar o conteúdo do mês | Prompt de IA — ver `directives/geracao_conteudo_sheets.md` |
-| 2 | Salvar a planilha | Como `conteudo/2026-09.xlsx` — **o nome define o mês** |
-| 3 | Gerar as artes | Canva Criar em lote — ver `directives/canva_bulk_create.md` |
-| 4 | Renomear as artes | `python execution/renomeador_imagens.py --dir "C:\caminho\do\export" --mes 2026-09` |
-| 5 | Conferir | `python execution/conferir_agenda.py --dias 30 --inicio 2026-09-01` |
-| 6 | Entregar | `git add .` &nbsp;→&nbsp; `git commit -m "conteudo de setembro"` &nbsp;→&nbsp; `git push` |
+| 2 | Salvar a planilha | Salve como `conteudo/AAAA-MM.xlsx` (ex.: `conteudo/2026-11.xlsx`). **O nome define o mês.** |
+| 3 | Gerar e exportar as artes | No Canva, use Criar em lote; baixe todas as páginas em PNG e extraia o ZIP em `imagens_canva/` na raiz do projeto. Mantenha `1.png`, `2.png`, etc. |
+| 4 | Renomear e mover as artes | `python execution/renomeador_imagens.py --dir "imagens_canva" --mes 2026-11` — o script move os arquivos para `imagens/` e dá os nomes finais. |
+| 5 | Conferir | `python execution/conferir_agenda.py --dias 30 --inicio 2026-11-01` |
+| 6 | Entregar | `git add conteudo imagens` &nbsp;→&nbsp; `git commit -m "conteudo de novembro/2026"` &nbsp;→&nbsp; `git push` |
 
 Só avance do passo 5 para o 6 quando **todos os dias** aparecerem como `ok`.
+
+**Regra simples das pastas:** a planilha fica em `conteudo/`; o ZIP extraído
+do Canva, ainda com os nomes numéricos, fica primeiro em `imagens_canva/`; e
+somente o `renomeador_imagens.py` coloca as artes prontas em `imagens/`. Após
+executá-lo, `imagens_canva/` fica vazia porque os arquivos foram movidos.
 
 ---
 
